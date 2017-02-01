@@ -1,0 +1,22 @@
+[
+   {
+     "nodeName": "Light:TAE",  
+     "nodeType": "Light",
+     "nodePin": 1
+   },
+   {  
+      "nodeName": "RotaryAngle:TAE",  
+      "nodeType": "RotaryAngle",  
+      "nodePin": 2
+   },
+   {  
+      "nodeName": "Temperature:TAE",  
+      "nodeType": "Temperature",  
+      "nodePin": 3
+   },
+   {  
+      "nodeName": "Button:TAE",  
+      "nodeType": "Button",  
+      "nodePin": 4
+   }
+]
