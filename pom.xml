@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ge.predix.solsvc</groupId>
 	<artifactId>predix-machine-template-adapter-pi</artifactId>
-	<version>1.1.8</version>
+	<version>1.1.15</version>
 	<packaging>bundle</packaging>
 
 	<properties>
@@ -350,13 +350,10 @@
 				<configuration>
 					<instructions>
 						<_noee>true</_noee>
-						<Include-Resource>
-						  pi4j-core-1.1.jar
-						</Include-Resource>
 						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
 						<Bundle-Classpath>
-							.,pi4j-core-1.1.jar,
+							.,pi4j-core-1.0.jar,
 							GrovePi-spec-0.1.0.jar,
 							GrovePi-dio-0.1.0.jar,
 							Pi-dio-0.1.0.jar,Pi-pi4j-0.1.0.jar,Pi-spec-0.1.0.jar,GrovePi-pi4j-0.1.0.jar

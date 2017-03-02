@@ -15,7 +15,6 @@ else
 COLUMNS=$(tput cols)
 fi
 
-MACHINE_HOME="$CURRENT_DIR/predix-scripts/bash/PredixMachine"
 COMPILE_REPO=0
 
 export COLUMNS
@@ -85,19 +84,12 @@ rm -rf predix-machine-templates
 getRepoURL "predix-scripts" predix_scripts_url
 getRepoVersion "predix-scripts" predix_scripts_version
 __echo_run git clone "$predix_scripts_url" -b $predix_scripts_version
-cd predix-scripts
-__echo_run __checkoutTags "predix-scripts"
 
 __print_center "Creating Cloud Services" "#"
 
 cd $CURRENT_DIR/predix-scripts
 source bash/readargs.sh
 source bash/scripts/files_helper_funcs.sh
-#if [[ ( "$RELEASE_TAG_VERSION" != "") ]]; then
-	#git stash
-	#__checkoutTags "predix-scripts" "$RELEASE_TAG_VERSION"
- #fi
-
 
 cd $CURRENT_DIR/predix-scripts/bash
 
@@ -112,17 +104,21 @@ else
 __echo_run ./quickstart.sh -mc -p $arguments
 fi
 
+source ./scripts/variables.sh
+
+echo "MACHINE_VERSION : $MACHINE_VERSION"
+echo "PREDIX_MACHINE_HOME : $PREDIX_MACHINE_HOME"
 cd "$CURRENT_DIR"
 
 __print_center "Build and setup the Predix Machine Adapter for Intel Device" "#"
 
-__echo_run cp "$CURRENT_DIR/config/com.ge.predix.solsvc.workshop.adapter.config" "$MACHINE_HOME/configuration/machine"
-__echo_run cp "$CURRENT_DIR/config/com.ge.predix.workshop.nodeconfig.json" "$MACHINE_HOME/configuration/machine"
-__echo_run cp "$CURRENT_DIR/config/com.ge.dspmicro.hoover.spillway-0.config" "$MACHINE_HOME/configuration/machine"
-#__echo_run cp "$CURRENT_DIR/config/start_container.sh" "$MACHINE_HOME/machine/bin/predix"
+__echo_run cp "$CURRENT_DIR/config/com.ge.predix.solsvc.workshop.adapter.config" "$PREDIX_MACHINE_HOME/configuration/machine"
+__echo_run cp "$CURRENT_DIR/config/com.ge.predix.workshop.nodeconfig.json" "$PREDIX_MACHINE_HOME/configuration/machine"
+__echo_run cp "$CURRENT_DIR/config/com.ge.dspmicro.hoover.spillway-0.config" "$PREDIX_MACHINE_HOME/configuration/machine"
+#__echo_run cp "$CURRENT_DIR/config/start_container.sh" "$PREDIX_MACHINE_HOME/machine/bin/predix"
 
 #Replace the :TAE tag with instance prepender
-configFile="$MACHINE_HOME/configuration/machine/com.ge.predix.workshop.nodeconfig.json"
+configFile="$PREDIX_MACHINE_HOME/configuration/machine/com.ge.predix.workshop.nodeconfig.json"
 __find_and_replace ":TAE" ":$(echo $INSTANCE_PREPENDER | tr 'a-z' 'A-Z')" "$configFile" "$quickstartLogDir"
 
 if [[ $RUN_COMPILE_REPO -eq 1 ]]; then
@@ -130,7 +126,7 @@ if [[ $RUN_COMPILE_REPO -eq 1 ]]; then
 fi
 
 cd predix-scripts/bash
-./scripts/buildMavenBundle.sh "$MACHINE_HOME"
+./scripts/buildMavenBundle.sh "$PREDIX_MACHINE_HOME"
 
 cd $CURRENT_DIR
 
