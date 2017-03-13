@@ -353,7 +353,7 @@
 						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
 						<Bundle-Classpath>
-							.,pi4j-core-1.0.jar,
+							.,pi4j-core-1.1.jar,
 							GrovePi-spec-0.1.0.jar,
 							GrovePi-dio-0.1.0.jar,
 							Pi-dio-0.1.0.jar,Pi-pi4j-0.1.0.jar,Pi-spec-0.1.0.jar,GrovePi-pi4j-0.1.0.jar
