@@ -350,6 +350,9 @@
 				<configuration>
 					<instructions>
 						<_noee>true</_noee>
+						<Include-Resource>
+						  pi4j-core-1.1.jar
+						</Include-Resource>
 						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
 						<Bundle-Classpath>
