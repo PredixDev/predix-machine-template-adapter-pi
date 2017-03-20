@@ -3,6 +3,9 @@ cd IoTDevices
 
 mvn -q install:install-file -Dfile=lib/dio.jar -DgroupId=jdk.dio -DartifactId=dio -Dversion=1.0 -Dpackaging=jar
 
+mvn -q clean install -f GrovePi-spec/pom.xml
+mvn -q clean install -f Pi-spec/pom.xml
+
 mvn -f GrovePi-spec/pom.xml build-helper:parse-version versions:set -DnewVersion="\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}"
 mvn -f GrovePi-spec/pom.xml versions:update-properties -Dincludes="org.iot.raspberry" -DallowSnapshots=false
 mvn -f GrovePi-spec/pom.xml versions:use-releases -Dincludes=org.iot.raspberry
