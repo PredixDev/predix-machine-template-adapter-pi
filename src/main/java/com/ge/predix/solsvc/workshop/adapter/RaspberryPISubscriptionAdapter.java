@@ -299,8 +299,9 @@ public class RaspberryPISubscriptionAdapter
         DecimalFormat df = new DecimalFormat("####.##"); //$NON-NLS-1$
         double fvalue = 0.0f;
         WorkshopDataNodePI node = this.dataNodes.get(nodeId);
-    	try {
-			switch (node.getNodeType()) {
+		for (int try_num = 1;; try_num++) {
+			try {
+				switch (node.getNodeType()) {
 				case "Light": //$NON-NLS-1$
 					fvalue = node.getLightNode().get();
 				break;
@@ -329,9 +330,17 @@ public class RaspberryPISubscriptionAdapter
 					break;
 				default:
 					break;
+				}
+			} catch (Exception e) {
+				if (try_num < 3) {
+					String msg = String.format("Exception when reading data from sensor node (will retry)\n%s", //$NON-NLS-1$
+							e.toString());
+					_logger.error(msg);
+				} else {
+					throw new RuntimeException("Exception when reading data from the sensor node", e); //$NON-NLS-1$
+				}
 			}
-		} catch (Exception e) {
-			throw new RuntimeException("Exception when reading data from the sensor nodes",e); //$NON-NLS-1$
+			break;
 		}
     	
         PEnvelope envelope = new PEnvelope(fvalue);
