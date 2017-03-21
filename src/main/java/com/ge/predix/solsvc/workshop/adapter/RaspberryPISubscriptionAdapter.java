@@ -331,6 +331,7 @@ public class RaspberryPISubscriptionAdapter
 				default:
 					break;
 				}
+				break;
 			} catch (Exception e) {
 				if (try_num < 3) {
 					String msg = String.format("Exception when reading data from sensor node (will retry)\n%s", //$NON-NLS-1$
@@ -340,7 +341,6 @@ public class RaspberryPISubscriptionAdapter
 					throw new RuntimeException("Exception when reading data from the sensor node", e); //$NON-NLS-1$
 				}
 			}
-			break;
 		}
     	
         PEnvelope envelope = new PEnvelope(fvalue);
