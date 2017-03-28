@@ -1,3 +1,4 @@
+rm -rf IoTDevices
 git clone https://github.com/emoranchel/IoTDevices.git --depth 1
 cd IoTDevices
 
@@ -40,14 +41,13 @@ mvn -f examples/pom.xml build-helper:parse-version versions:set -DnewVersion="\$
 mvn -f examples/pom.xml versions:update-properties -Dincludes="org.iot.raspberry" -DallowSnapshots=false
 mvn -f examples/pom.xml versions:use-releases -Dincludes=org.iot.raspberry
 
-mvn -q clean install -f GrovePi-spec/pom.xml
-mvn -q clean install -f Pi-spec/pom.xml
-mvn -q clean install -f GrovePi-pi4j/pom.xml
-mvn -q clean install -f GrovePi-dio/pom.xml
-mvn -q clean install -f Pi-dio/pom.xml
-mvn -q clean install -f Pi-pi4j/pom.xml
+mvn -q clean source:jar install -f GrovePi-spec/pom.xml
+mvn -q clean source:jar install -f Pi-spec/pom.xml
+mvn -q clean source:jar install -f GrovePi-pi4j/pom.xml
+mvn -q clean source:jar install -f GrovePi-dio/pom.xml
+mvn -q clean source:jar install -f Pi-dio/pom.xml
+mvn -q clean source:jar install -f Pi-pi4j/pom.xml
 
-ls ~/.m2/repository/org/iot/raspberry
+find  ~/.m2/repository/org/iot/raspberry -name "*.jar"
 cd ..
 
-rm -rf IoTDevices
