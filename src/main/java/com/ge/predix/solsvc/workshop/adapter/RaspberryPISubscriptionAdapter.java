@@ -12,12 +12,11 @@ package com.ge.predix.solsvc.workshop.adapter;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -25,11 +24,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
-import org.iot.raspberry.grovepi.devices.GroveLed;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ge.dspmicro.hoover.api.spillway.ISpillway;
 import com.ge.dspmicro.machinegateway.api.adapter.IDataSubscription;
 import com.ge.dspmicro.machinegateway.api.adapter.IDataSubscriptionListener;
 import com.ge.dspmicro.machinegateway.api.adapter.IEdgeDataSubscription;
@@ -42,92 +45,57 @@ import com.ge.dspmicro.machinegateway.api.adapter.MachineAdapterState;
 import com.ge.dspmicro.machinegateway.types.PDataNode;
 import com.ge.dspmicro.machinegateway.types.PDataValue;
 import com.ge.dspmicro.machinegateway.types.PEnvelope;
+import com.ge.predix.solsvc.workshop.api.ISampleAdapterConfig;
 import com.ge.predix.solsvc.workshop.config.JsonDataNode;
+import com.ge.predix.solsvc.workshop.config.TriggerNode;
 import com.ge.predix.solsvc.workshop.types.WorkshopDataNodePI;
 import com.ge.predix.solsvc.workshop.types.WorkshopDataSubscription;
 import com.ge.predix.solsvc.workshop.types.WorkshopSubscriptionListener;
 
-import aQute.bnd.annotation.component.Activate;
-import aQute.bnd.annotation.component.Component;
-import aQute.bnd.annotation.component.ConfigurationPolicy;
-import aQute.bnd.annotation.component.Deactivate;
-import aQute.bnd.annotation.component.Modified;
-import aQute.bnd.annotation.metatype.Configurable;
-import aQute.bnd.annotation.metatype.Meta;
+import parsii.eval.Expression;
+import parsii.eval.Parser;
+import parsii.tokenizer.ParseException;
 
 /**
  * 
  * @author Predix Machine Sample
  */
 @SuppressWarnings({ "javadoc", "deprecation" })
-@Component(name = RaspberryPISubscriptionAdapter.SERVICE_PID, provide =
+@Component(name = RaspberryPISubscriptionAdapter.SERVICE_PID, service =
 {
 		ISubscriptionMachineAdapter.class, IMachineAdapter.class
-}, designate = RaspberryPISubscriptionAdapter.Config.class, configurationPolicy = ConfigurationPolicy.require)
+})
 public class RaspberryPISubscriptionAdapter
         implements ISubscriptionMachineAdapter
 {
-    // Meta mapping for configuration properties
-    @Meta.OCD(name = "%component.name", factory=true, localization = "OSGI-INF/l10n/bundle")
-    interface Config
-    {
-        @Meta.AD(name = "%updateInterval.name", description = "%updateInterval.description", id = UPDATE_INTERVAL, required = false, deflt = "")
-        String updateInterval();
+	/** Service PID for Sample Machine Adapter */
+	public static final String SERVICE_PID = "com.ge.predix.solsvc.simulator.adapter"; //$NON-NLS-1$
+	/**
+	 * The regular expression used to split property values into String array.
+	 */
+	public final static String SPLIT_PATTERN = "\\s*\\|\\s*"; //$NON-NLS-1$
 
-        @Meta.AD(name = "%nodeConfigFile.name", description = "%nodeConfigFile.description", id = NODE_NAMES, required = false, deflt = "")
-        String nodeConfigFile();
+	public final static String MACHINE_HOME = System.getProperty("predix.home.dir"); //$NON-NLS-1$
+	// Create logger to report errors, warning massages, and info messages
+	// (runtime Statistics)
+	private static final Logger _logger = LoggerFactory.getLogger(RaspberryPISubscriptionAdapter.class);
+	private UUID uuid = UUID.randomUUID();
+	private MachineAdapterInfo adapterInfo;
+	private MachineAdapterState adapterState;
+	private Map<UUID, WorkshopDataNodePI> dataNodes = new HashMap<UUID, WorkshopDataNodePI>();
 
-        @Meta.AD(name = "%adapterName.name", description = "%adapterName.description", id = ADAPTER_NAME, required = false, deflt = "")
-        String adapterName();
+	private ISampleAdapterConfig config;
+	
+	private ISpillway spillway;
+	/**
+	 * Data cache for holding latest data updates
+	 */
+	protected Map<UUID, PDataValue> dataValueCache = new ConcurrentHashMap<UUID, PDataValue>();
+	private Map<UUID, WorkshopDataSubscription> dataSubscriptions = new HashMap<UUID, WorkshopDataSubscription>();
 
-        @Meta.AD(name = "%adapterDescription.name", description = "%adapterDescription.description", id = ADAPTER_DESCRIPTION, required = false, deflt = "")
-        String adapterDescription();
-
-        @Meta.AD(id = DATA_SUBSCRIPTIONS, name = "%dataSubscriptions.name", description = "%dataSubscriptions.description", required = true, deflt = "")
-        String dataSubscriptions();
-    }
-
-    /** Service PID for Sample Machine Adapter */
-    public static final String                SERVICE_PID         = "com.ge.predix.solsvc.workshop.adapter";         //$NON-NLS-1$
-    /** Key for Node Configuration File*/
-    public static final String 				  NODE_CONFI_FILE 	  = SERVICE_PID+"configFile";                                    //$NON-NLS-1$
-    /** Key for Update Interval */
-    public static final String                UPDATE_INTERVAL     = SERVICE_PID + ".UpdateInterval";                             //$NON-NLS-1$
-    /** Key for number of nodes */
-    public static final String                NODE_NAMES          = SERVICE_PID + ".NodeConfigFile";                              //$NON-NLS-1$
-    /** key for machine adapter name */
-    public static final String                ADAPTER_NAME        = SERVICE_PID + ".Name";                                       //$NON-NLS-1$
-    /** Key for machine adapter description */
-    public static final String                ADAPTER_DESCRIPTION = SERVICE_PID + ".Description";                                //$NON-NLS-1$
-    /** data subscriptions */
-    public static final String                DATA_SUBSCRIPTIONS  = SERVICE_PID + ".DataSubscriptions";                          //$NON-NLS-1$
-    /** The regular expression used to split property values into String array. */
-    public final static String                SPLIT_PATTERN       = "\\s*\\|\\s*";                                               //$NON-NLS-1$
-
-    public final static String 				  MACHINE_HOME		  = System.getProperty("predix.home.dir"); 					 	 //$NON-NLS-1$
-    // Create logger to report errors, warning massages, and info messages (runtime Statistics)
-    private static final Logger               _logger             = LoggerFactory
-                                                                          .getLogger(RaspberryPISubscriptionAdapter.class);
-    private UUID                              uuid                = UUID.randomUUID();
-    private Dictionary<String, Object>        props;
-    private MachineAdapterInfo                adapterInfo;
-    private MachineAdapterState               adapterState;
-    private Map<UUID,WorkshopDataNodePI>         dataNodes           = new HashMap<UUID, WorkshopDataNodePI>();
-
-    private int                               updateInterval;
-
-    private Config                            config;
-
-    private static int ADC_REF=5;
-
-    /**
-     * Data cache for holding latest data updates
-     */
-    protected Map<UUID, PDataValue>           dataValueCache      = new ConcurrentHashMap<UUID, PDataValue>();
-    private Map<UUID, WorkshopDataSubscription> dataSubscriptions   = new HashMap<UUID, WorkshopDataSubscription>();
-
-    private IDataSubscriptionListener         dataUpdateHandler   = new WorkshopSubscriptionListener();
-
+	private List<JsonDataNode> configNodes = new ArrayList<JsonDataNode>();
+	private IDataSubscriptionListener dataUpdateHandler = new WorkshopSubscriptionListener();
+	
     /*
      * ###############################################
      * # OSGi service lifecycle management #
@@ -144,69 +112,53 @@ public class RaspberryPISubscriptionAdapter
     public void activate(ComponentContext ctx)
             throws IOException
     {
-        if ( _logger.isDebugEnabled() )
-        {
-            _logger.debug("Starting sample " + ctx.getBundleContext().getBundle().getSymbolicName()); //$NON-NLS-1$
-        }
-        
-        // Get all properties and create nodes.
-        this.props = ctx.getProperties();
+    	ObjectMapper mapper = new ObjectMapper();
+		File configFile = new File(MACHINE_HOME + File.separator + this.config.getNodeConfigFile());
+		this.configNodes = mapper.readValue(configFile, new TypeReference<List<JsonDataNode>>() {
+			//
+		});
+		createNodes(this.configNodes);
 
-        this.config = Configurable.createConfigurable(Config.class, ctx.getProperties());
+		this.adapterInfo = new MachineAdapterInfo(this.config.getAdapterName(), RaspberryPISubscriptionAdapter.SERVICE_PID,
+				this.config.getAdapterDescription(), ctx.getBundleContext().getBundle().getVersion().toString());
 
-        this.updateInterval = Integer.parseInt(this.config.updateInterval());
-        ObjectMapper mapper = new ObjectMapper();
-        File configFile = new File(MACHINE_HOME+File.separator+this.config.nodeConfigFile());
-        List<JsonDataNode> nodes = mapper.readValue(configFile, new TypeReference<List<JsonDataNode>>()
-        {
-            //
-        });
-        createNodes(nodes);
-
-        this.adapterInfo = new MachineAdapterInfo(this.config.adapterName(),
-                RaspberryPISubscriptionAdapter.SERVICE_PID, this.config.adapterDescription(), ctx
-                        .getBundleContext().getBundle().getVersion().toString());
-
-        List<String> subs = Arrays.asList(parseDataSubscriptions(DATA_SUBSCRIPTIONS));
-        // Start data subscription and sign up for data updates.
-        for (String sub : subs)
-        {
-            WorkshopDataSubscription dataSubscription = new WorkshopDataSubscription(this, sub, this.updateInterval,
-                    new ArrayList<PDataNode>(this.dataNodes.values()));
-            this.dataSubscriptions.put(dataSubscription.getId(), dataSubscription);
-            // Using internal listener, but these subscriptions can be used with Spillway listener also
-            dataSubscription.addDataSubscriptionListener(this.dataUpdateHandler);
-            new Thread(dataSubscription).start();
-        }
+		List<String> subs = Arrays.asList(parseDataSubscriptions());
+		// Start data subscription and sign up for data updates.
+		for (String sub : subs) {
+			_logger.info("Creating subscription for "+sub);
+			WorkshopDataSubscription dataSubscription = new WorkshopDataSubscription(this, sub, this.config.getUpdateInterval(),
+					new ArrayList<PDataNode>(this.dataNodes.values()),this.spillway);
+			this.dataSubscriptions.put(dataSubscription.getId(), dataSubscription);
+			// Using internal listener, but these subscriptions can be used with
+			// Spillway listener also
+			dataSubscription.addDataSubscriptionListener(this.dataUpdateHandler);
+			new Thread(dataSubscription).start();
+		}
     }
 
-    private String[] parseDataSubscriptions(String key)
+    private String[] parseDataSubscriptions()
     {
     	
-        Object objectValue = this.props.get(key);
-        _logger.info("Key : "+key+" : "+objectValue); //$NON-NLS-1$ //$NON-NLS-2$
-        if ( objectValue == null )
-        {
-            invalidDataSubscription();
-        }else {
+    	Object objectValue = this.config.getDataSubscriptions();
+		_logger.info("Data Subscriptions :  " + objectValue); //$NON-NLS-1$ //$NON-NLS-2$
+		if (objectValue == null) {
+			invalidDataSubscription();
+		} else {
 
-	        if ( objectValue instanceof String[] )
-	        {
-	            if ( ((String[]) objectValue).length == 0 )
-	            {
-	                invalidDataSubscription();
-	            }
-	            return (String[]) objectValue;
-	        }
-	
-	        String stringValue = objectValue.toString();
-	        if ( stringValue.length() > 0 )
-	        {
-	            return stringValue.split(SPLIT_PATTERN);
-	        }
-        }
-        invalidDataSubscription();
-        return new String[0];
+			if (objectValue instanceof String[]) {
+				if (((String[]) objectValue).length == 0) {
+					invalidDataSubscription();
+				}
+				return (String[]) objectValue;
+			}
+
+			String stringValue = objectValue.toString();
+			if (stringValue.length() > 0) {
+				return stringValue.split(SPLIT_PATTERN);
+			}
+		}
+		invalidDataSubscription();
+		return new String[0];
     }
 
     
@@ -239,20 +191,6 @@ public class RaspberryPISubscriptionAdapter
             sub.stop();
         }
         this.adapterState = MachineAdapterState.Stopped;
-    }
-
-    /**
-     * OSGi component lifecycle modified method. Called when
-     * the component properties are changed.
-     * 
-     * @param ctx component context
-     */
-    @Modified
-    public synchronized void modified(ComponentContext ctx)
-    {
-        // Handle run-time changes to properties.
-
-        this.props = ctx.getProperties();
     }
 
     /*
@@ -295,58 +233,32 @@ public class RaspberryPISubscriptionAdapter
 	public PDataValue readData(UUID nodeId)
             throws MachineAdapterException
     {
-        PDataValue pDataValue = new PDataValue(nodeId);
-        DecimalFormat df = new DecimalFormat("####.##"); //$NON-NLS-1$
-        double fvalue = 0.0f;
-        WorkshopDataNodePI node = this.dataNodes.get(nodeId);
-		for (int try_num = 1;; try_num++) {
-			try {
-				switch (node.getNodeType()) {
-				case "Light": //$NON-NLS-1$
-					fvalue = node.getLightNode().get();
-				break;
-				case "Temperature": //$NON-NLS-1$
-					fvalue = node.getTempNode().get().getTemperature();
-					break;
-				case "Sound": //$NON-NLS-1$
-					fvalue = node.getSoundNode().get();
-					break;
-				case "RotaryAngle": //$NON-NLS-1$
-					double sensorValue = node.getRotaryNode().get().getSensorValue();
-					double calculatedValue = Math.round((sensorValue) * ADC_REF / 1023);
-					
-					fvalue = new Double(df.format(calculatedValue));
-					GroveLed ledPin = node.getLedNode();
-					if (calculatedValue > 3.0) {
-						ledPin.set(true);
-					}else {
-						ledPin.set(false);
+    	PDataValue pDataValue = new PDataValue(nodeId);
+
+    	WorkshopDataNodePI node = this.dataNodes.get(nodeId);
+		if ("IN".equals(node.getNodePinDir())) { //$NON-NLS-1$
+			// String nodeType = node.getNodeType();
+
+			double value = node.readValue();
+			pDataValue = buildEnvelope(node, value);
+			List<TriggerNode> triggerNodes = node.getTriggerNodes();
+			if (triggerNodes != null && triggerNodes.size() > 0) {
+				for (TriggerNode tNode : triggerNodes) {
+					WorkshopDataNodePI triggerNode = getNodeByName(tNode.getNodeName());
+					// String valExp = tNode.getNodeValueExpression();
+					String evalExp = tNode.getNodeValueExpression().replaceAll("#NODE_VALUE#", //$NON-NLS-1$
+							pDataValue.getValue().getValue().toString());
+					_logger.info("Eval Exp : "+evalExp);
+					double evalResult = eval(evalExp);
+					if ("DIGITAL".equals(triggerNode.getNodePinType().toUpperCase())) { //$NON-NLS-1$
+						if (triggerNode.getNodeType().equals("LED")) {
+							triggerNode.writeValue(evalResult);
+						}
 					}
-					break;
-				case "Button": //$NON-NLS-1$
-					boolean value = node.getButtonNode().get();
-					fvalue = value ? 1.0 : 0.0;
-					node.getBuzzerNode().set(value);
-					break;
-				default:
-					break;
-				}
-				break;
-			} catch (Exception e) {
-				if (try_num < 3) {
-					String msg = String.format("Exception when reading data from sensor node (will retry)\n%s", //$NON-NLS-1$
-							e.toString());
-					_logger.error(msg);
-				} else {
-					throw new RuntimeException("Exception when reading data from the sensor node", e); //$NON-NLS-1$
 				}
 			}
 		}
-    	
-        PEnvelope envelope = new PEnvelope(fvalue);
-        pDataValue = new PDataValue(node.getNodeId(), envelope);
-        pDataValue.setNodeName(node.getName());
-        pDataValue.setAddress(node.getAddress());
+		pDataValue.setAddress(node.getAddress());
         // Do not return null.
         return pDataValue;
     }
@@ -410,7 +322,7 @@ public class RaspberryPISubscriptionAdapter
 
             // Create new subscription.
             WorkshopDataSubscription newSubscription = new WorkshopDataSubscription(this, subscription.getName(),
-                    subscription.getUpdateInterval(), subscriptionNodes);
+                    subscription.getUpdateInterval(), subscriptionNodes,this.spillway);
             this.dataSubscriptions.put(newSubscription.getId(), newSubscription);
             new Thread(newSubscription).start();
             return newSubscription.getId();
@@ -482,7 +394,7 @@ public class RaspberryPISubscriptionAdapter
     {
         for (JsonDataNode jsonNode:nodes)
         {
-                WorkshopDataNodePI node = new WorkshopDataNodePI(this.uuid, jsonNode.getNodeName(),jsonNode.getNodeType(),jsonNode.getNodePin());
+                WorkshopDataNodePI node = new WorkshopDataNodePI(this.uuid, jsonNode);
 	            // Create a new node and put it in the cache.
 	            this.dataNodes.put(node.getNodeId(), node);
             
@@ -541,5 +453,55 @@ public class RaspberryPISubscriptionAdapter
 	public void removeEdgeDataSubscription(UUID arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	private PDataValue buildEnvelope(WorkshopDataNodePI node, Object value) {
+		PEnvelope envelope = new PEnvelope(value);
+		PDataValue pDataValue = new PDataValue(node.getNodeId(), envelope);
+		pDataValue.setNodeName(node.getName());
+		// pDataValue.setAddress(node.getAddress());
+
+		return pDataValue;
+	}
+	
+	/**
+	 * @param nodeName
+	 *            -
+	 * @return -
+	 */
+	public WorkshopDataNodePI getNodeByName(String nodeName) {
+		Iterator<UUID> iter = this.dataNodes.keySet().iterator();
+		while (iter.hasNext()) {
+			UUID key = iter.next();
+			WorkshopDataNodePI node = this.dataNodes.get(key);
+			if (nodeName.equals(node.getName())) {
+				return node;
+			}
+		}
+		return null;
+	}
+	/**
+	 * @param expression
+	 *            -
+	 * @return -
+	 */
+	public double eval(String expression) {
+		Expression expr;
+		try {
+			expr = Parser.parse(expression);
+			return expr.evaluate();
+		} catch (ParseException e) {
+			throw new RuntimeException("Exception when evaluating expression", e); //$NON-NLS-1$
+		}
+	}
+
+	@Reference
+	public void setConfig(ISampleAdapterConfig config) {
+		this.config = config;
+	}
+
+	@Reference
+	public void setSpillway(ISpillway spillway) {
+		this.spillway = spillway;
 	}
 }

@@ -12,18 +12,23 @@ package com.ge.predix.solsvc.workshop.types;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.text.DecimalFormat;
+import java.util.List;
 import java.util.UUID;
 
+import org.iot.raspberry.grovepi.GroveAnalogIn;
+import org.iot.raspberry.grovepi.GroveAnalogOut;
 import org.iot.raspberry.grovepi.GroveDigitalIn;
 import org.iot.raspberry.grovepi.GroveDigitalOut;
-import org.iot.raspberry.grovepi.devices.GroveLed;
-import org.iot.raspberry.grovepi.devices.GroveLightSensor;
-import org.iot.raspberry.grovepi.devices.GroveRotarySensor;
-import org.iot.raspberry.grovepi.devices.GroveSoundSensor;
 import org.iot.raspberry.grovepi.devices.GroveTemperatureAndHumiditySensor;
 import org.iot.raspberry.grovepi.pi4j.GrovePi4J;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ge.dspmicro.machinegateway.types.PDataNode;
+import com.ge.predix.solsvc.workshop.config.JsonDataNode;
+import com.ge.predix.solsvc.workshop.config.TriggerNode;
 
 /**
  * 
@@ -32,58 +37,104 @@ import com.ge.dspmicro.machinegateway.types.PDataNode;
  */
 public class WorkshopDataNodePI extends PDataNode
 {
-	private GroveLightSensor lightNode;
 	
-	private GroveRotarySensor rotaryNode;
+	private static final Logger               _logger             = LoggerFactory.getLogger(WorkshopDataNodePI.class);
+	private String nodeType;
+
+	private String nodePinType;
 	
-	private GroveTemperatureAndHumiditySensor tempNode;
+	private String nodePinDir;
 	
-	private GroveSoundSensor soundNode;
+	private String expression;
 	
-	private GroveDigitalIn buttonNode;
+	private String nodeClass;
 	
-	private GroveDigitalOut buzzerNode;
+	private List<TriggerNode> triggerNodes;
 	
-	private GroveLed ledNode; 
+	private GroveAnalogIn analogIn;
+	
+	private GroveAnalogOut analogOut;
+	
+	private GroveTemperatureAndHumiditySensor temperatureNode;
+	
+	
+	private GroveDigitalIn digitalIn;
+	
+	private GroveDigitalOut digitalOut;
+	
+
 		
-    private String nodeType;
     /**
 	 * @param machineAdapterId -
-	 * @param name -
-     * @param nodeType - 
-     * @param nodePin -
+	 * @param node -
 	 */
-	public WorkshopDataNodePI(UUID machineAdapterId, String name,String nodeType,int nodePin) {
-		super(machineAdapterId, name);
-		this.nodeType = nodeType;
+	@SuppressWarnings("resource")
+	public WorkshopDataNodePI(UUID machineAdapterId, JsonDataNode node) {
+		super(machineAdapterId, node.getNodeName());
+		this.nodeType = node.getNodeType();
+		this.setTriggerNodes(node.getTriggerNodes());
+		this.nodePinType = node.getNodePinType();
+		this.nodePinDir = node.getNodePinDir();
+		this.expression = node.getExpression();
+		this.nodeClass = node.getNodeClass();
+		int bufferSize = 1024;
 		try {
 			GrovePi4J pi = new GrovePi4J();
-			switch (this.nodeType) {
-			case "Light": //$NON-NLS-1$
-				this.lightNode = new GroveLightSensor(pi, nodePin);
-				break;
-			case "Temperature": //$NON-NLS-1$
-				this.tempNode = new GroveTemperatureAndHumiditySensor(pi, nodePin, GroveTemperatureAndHumiditySensor.Type.DHT11);
-				break;
-			case "Sound": //$NON-NLS-1$
-				this.soundNode = new GroveSoundSensor(pi, nodePin);
-				break;
-			case "RotaryAngle": //$NON-NLS-1$
-				this.rotaryNode = new GroveRotarySensor(pi,nodePin);
-				this.ledNode = new GroveLed(new GrovePi4J(),3);
-				break;
-			case "Button": //$NON-NLS-1$
-				this.buttonNode = new GroveDigitalIn(pi, nodePin);
-				this.buzzerNode = new GroveDigitalOut(pi, 5);	
-				break;
-			default:
-				break;
+			int nodePin = node.getNodePin();
+			switch ((this.nodePinType+":"+this.nodePinDir).toUpperCase()) {
+				case "ANALOG:IN" :
+					this.analogIn = pi.getAnalogIn(nodePin, bufferSize);
+					break;
+				case "ANALOG:OUT" :
+					this.analogOut = pi.getAnalogOut(nodePin);
+					break;
+				case "DIGITAL:IN" :
+					this.digitalIn = pi.getDigitalIn(nodePin);
+					break;
+				case "DIGITAL:OUT" :
+					this.digitalOut = pi.getDigitalOut(nodePin);
+					break;
 			}
+			
 		} catch (Exception e) {
 			throw new RuntimeException("Exception when building the nodes",e); //$NON-NLS-1$
 		}
 	}
 
+	public double readValue() {
+		double fvalue = 0.0f;
+		try {
+			switch ((this.nodePinType+":"+this.nodePinDir).toUpperCase()) {
+			case "ANALOG:IN" :
+				DecimalFormat df = new DecimalFormat("####.##"); //$NON-NLS-1$
+				
+				fvalue = new Double(df.format(ByteBuffer.wrap(this.analogIn.get()).getFloat()));
+				
+				break;
+			case "DIGITAL:IN" :
+				fvalue = this.digitalIn.get() ? 1.0 : 0.0;
+				break;
+			}
+		}catch(Exception e){
+			
+		}
+		return fvalue;
+	}
+	
+	public void writeValue(double value) {
+		try {
+			switch ((this.nodePinType+":"+this.nodePinDir).toUpperCase()) {
+			case "ANALOG:OUT" :
+				this.analogOut.set(value);
+				break;
+			case "DIGITAL:OUT" :
+				this.digitalOut.set(value == 1.0);
+				break;
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
     /**
      * Node address to uniquely identify the node.
      */
@@ -97,7 +148,8 @@ public class WorkshopDataNodePI extends PDataNode
         }
         catch (URISyntaxException e)
         {
-            return null;
+        	_logger.error("Exception",e);
+        	return null;
         }
     }
 
@@ -115,101 +167,59 @@ public class WorkshopDataNodePI extends PDataNode
 		this.nodeType = nodeType;
 	}
 
-	/**
-	 * @return -
-	 */
-	public GroveLightSensor getLightNode() {
-		return this.lightNode;
-	}
-
-	/**
-	 * @param lightNode -
-	 */
-	public void setLightNode(GroveLightSensor lightNode) {
-		this.lightNode = lightNode;
-	}
+	
 
 	/**
 	 * @return -
 	 */
-	public GroveRotarySensor getRotaryNode() {
-		return this.rotaryNode;
-	}
-
-	/**
-	 * @param rotaryNode -
-	 */
-	public void setRotaryNode(GroveRotarySensor rotaryNode) {
-		this.rotaryNode = rotaryNode;
-	}
-
-	/**
-	 * @return -
-	 */
-	public GroveTemperatureAndHumiditySensor getTempNode() {
-		return this.tempNode;
+	public GroveTemperatureAndHumiditySensor getTemperatureNode() {
+		return this.temperatureNode;
 	}
 
 	/**
 	 * @param tempNode -
 	 */
-	public void setTempNode(GroveTemperatureAndHumiditySensor tempNode) {
-		this.tempNode = tempNode;
+	public void setTemperatureNode(GroveTemperatureAndHumiditySensor tempNode) {
+		this.temperatureNode = tempNode;
 	}
 
-	/**
-	 * @return -
-	 */
-	public GroveDigitalIn getButtonNode() {
-		return this.buttonNode;
+	public String getNodePinType() {
+		return nodePinType;
 	}
 
-	/**
-	 * @param buttonNode -
-	 */
-	public void setButtonNode(GroveDigitalIn buttonNode) {
-		this.buttonNode = buttonNode;
+	public void setNodePinType(String nodePinType) {
+		this.nodePinType = nodePinType;
 	}
 
-	/**
-	 * @return -
-	 */
-	public GroveDigitalOut getBuzzerNode() {
-		return this.buzzerNode;
+	public String getNodePinDir() {
+		return nodePinDir;
 	}
 
-	/**
-	 * @param buzzerNode -
-	 */
-	public void setBuzzerNode(GroveDigitalOut buzzerNode) {
-		this.buzzerNode = buzzerNode;
+	public void setNodePinDir(String nodePinDir) {
+		this.nodePinDir = nodePinDir;
 	}
 
-	/**
-	 * @return -
-	 */
-	public GroveLed getLedNode() {
-		return this.ledNode;
+	public String getExpression() {
+		return expression;
 	}
 
-	/**
-	 * @param ledNode -
-	 */
-	public void setLedNode(GroveLed ledNode) {
-		this.ledNode = ledNode;
+	public void setExpression(String expression) {
+		this.expression = expression;
 	}
 
-	/**
-	 * @return -
-	 */
-	public GroveSoundSensor getSoundNode() {
-		return this.soundNode;
+	public String getNodeClass() {
+		return nodeClass;
 	}
 
-	/**
-	 * @param soundNode -
-	 */
-	public void setSoundNode(GroveSoundSensor soundNode) {
-		this.soundNode = soundNode;
+	public void setNodeClass(String nodeClass) {
+		this.nodeClass = nodeClass;
+	}
+
+	public List<TriggerNode> getTriggerNodes() {
+		return triggerNodes;
+	}
+
+	public void setTriggerNodes(List<TriggerNode> triggerNodes) {
+		this.triggerNodes = triggerNodes;
 	}
 }

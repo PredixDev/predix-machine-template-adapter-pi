@@ -15,11 +15,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.ge.dspmicro.hoover.api.spillway.ISpillway;
 import com.ge.dspmicro.machinegateway.api.adapter.IDataSubscription;
 import com.ge.dspmicro.machinegateway.api.adapter.IDataSubscriptionListener;
 import com.ge.dspmicro.machinegateway.api.adapter.ISubscriptionMachineAdapter;
+import com.ge.dspmicro.machinegateway.types.ITransferable;
 import com.ge.dspmicro.machinegateway.types.PDataNode;
-import com.ge.dspmicro.machinegateway.types.PDataValue;
 
 /**
  * 
@@ -34,6 +35,8 @@ public class WorkshopDataSubscription implements Runnable, IDataSubscription {
 	private List<IDataSubscriptionListener> listeners = new ArrayList<IDataSubscriptionListener>();
 	private final AtomicBoolean threadRunning = new AtomicBoolean();
 
+	private ISpillway spillway;
+	
 	/**
 	 * Constructor
 	 * 
@@ -47,7 +50,7 @@ public class WorkshopDataSubscription implements Runnable, IDataSubscription {
 	 *            list of nodes for this subscription
 	 */
 	public WorkshopDataSubscription(ISubscriptionMachineAdapter adapter, String subName, int updateInterval,
-			List<PDataNode> nodes) {
+			List<PDataNode> nodes,ISpillway spillway) {
 		if (updateInterval > 0) {
 			this.updateInterval = updateInterval;
 		} else {
@@ -56,11 +59,11 @@ public class WorkshopDataSubscription implements Runnable, IDataSubscription {
 
 		
 		this.adapter = adapter;
-
+		this.spillway = spillway;
+		
 		// Generate unique id.
 		this.uuid = UUID.randomUUID();
 		this.name = subName;
-
 		this.threadRunning.set(false);
 	}
 
@@ -123,25 +126,25 @@ public class WorkshopDataSubscription implements Runnable, IDataSubscription {
 	public void run() {
 		if (!this.threadRunning.get() && this.adapter.getNodes().size() > 0) {
 			this.threadRunning.set(true);
-
 			while (this.threadRunning.get()) {
 				// Generate random data for each node and push data update.
-				List<PDataValue> data = new ArrayList<PDataValue>();
-
+				List<ITransferable> dataList = new ArrayList<ITransferable>();
+				
 				for (PDataNode node : this.adapter.getNodes()) {
-					data.add(this.adapter.readData(node.getNodeId()));
+					WorkshopDataNodePI wNode = (WorkshopDataNodePI)node;
+					if ("IN".equals(wNode.getNodePinDir())) { //$NON-NLS-1$
+						dataList.add(this.adapter.readData(node.getNodeId()));
+					}
 				}
 
-				for (IDataSubscriptionListener listener : this.listeners) {
-					listener.onDataUpdate(this.adapter, data);
-				}
-
+				spillway.processAndTransferData(dataList);
+				
 				try {
 					// Wait for an updateInterval period before pushing next
 					// data update.
 					Thread.sleep(this.updateInterval);
 				} catch (InterruptedException e) {
-					// ignore
+					e.printStackTrace();
 				}
 			}
 		}
@@ -161,5 +164,13 @@ public class WorkshopDataSubscription implements Runnable, IDataSubscription {
 
 			// Do other clean up if needed...
 		}
+	}
+
+	public ISpillway getSpillway() {
+		return spillway;
+	}
+
+	public void setSpillway(ISpillway spillway) {
+		this.spillway = spillway;
 	}
 }

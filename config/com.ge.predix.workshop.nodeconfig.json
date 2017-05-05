@@ -1,22 +1,54 @@
 [
-   {
-     "nodeName": "Light:TAE",  
-     "nodeType": "Light",
-     "nodePin": 1
-   },
-   {  
-      "nodeName": "RotaryAngle:TAE",  
-      "nodeType": "RotaryAngle",  
-      "nodePin": 2
-   },
-   {  
-      "nodeName": "Temperature:TAE",  
-      "nodeType": "Temperature",  
-      "nodePin": 0
-   },
-   {  
-      "nodeName": "Button:TAE",  
-      "nodeType": "Button",  
-      "nodePin": 2
-   }
+	{  
+      	"nodeName": "RotaryAngle:TAE",  
+      	"nodeClass": "upm_grove.GroveRotary", 
+      	"nodeType": "RotaryAngle",  
+     	"nodePin": 2,
+      	"nodePinDir":"IN",
+     	"nodePinType":"Analog",
+     	"expression": "#NODE_VALUE# >= 3",
+     	"triggerNodes":[{
+     		"nodeName" : "LED:TAE",
+     		"nodeValueExpression" : " #NODE_VALUE# >= 3"
+     	}]
+   	},
+   	{  
+      	"nodeName": "Light:TAE",  
+      	"nodeClass": "upm_grove.GroveTemp", 
+      	"nodeType": "Light",  
+     	"nodePin": 1,
+      	"nodePinDir":"IN",
+     	"nodePinType":"Analog",
+     	"expression": ""
+   	},
+	{  
+      	"nodeName": "Temperature:TAE",
+      	"nodeType": "Temperature",  
+     	"nodePin": 4,
+      	"nodePinDir":"IN",
+     	"nodePinType":"Analog",
+     	"expression": ""
+   	},
+   	
+   
+	{
+		"nodeName": "Button:TAE",
+		"nodeClass": "upm_grove.GroveButton",   
+      	"nodeType": "Button",  
+      	"nodePin": 3,
+      	"nodePinDir":"IN",
+     	"nodePinType":"Digital",
+     	"triggerNodes":[{
+     		"nodeName" : "LED:TAE",
+     		"nodeValueExpression" : " #NODE_VALUE# = 1"
+     	}]
+   	},
+   	{  
+      	"nodeName": "LED:TAE", 
+      	"nodeClass": "upm_grove.GroveLed",  
+      	"nodeType": "LED",  
+      	"nodePin": 2,
+      	"nodePinDir":"OUT",
+     	"nodePinType":"Digital"
+   	}
 ]
