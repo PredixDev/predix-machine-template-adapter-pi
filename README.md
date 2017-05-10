@@ -4,6 +4,7 @@
 <a href="http://predixdev.github.io/predix-machine-template-adapter-pi" target="_blank">
 	<img height="50px" width="100px" src="images/pages.jpg" alt="view github pages">
 </a>
+
 # predix-workshop-machine
 Machine bundle for Predix workshop
 
