@@ -40,7 +40,7 @@ SKIP_SETUP=false
 #ASSET_MODEL="-amrmd predix-ui-seed/server/sample-data/predix-asset/asset-model-metadata.json predix-ui-seed/server/sample-data/predix-asset/asset-model.json"
 SCRIPT="-script build-basic-app.sh -script-readargs build-basic-app-readargs.sh"
 QUICKSTART_ARGS="-ba -uaa -asset -ts -wd -nsts -mc $SCRIPT"
-IZON_SH="https://github.build.ge.com/raw/adoption/izon/1.0.0/izon.sh"
+REPO_NAME=predix-machine-template-adapter-pi
 VERSION_JSON="version.json"
 PREDIX_SCRIPTS=predix-scripts
 VERSION_JSON="version.json"
@@ -49,7 +49,8 @@ TOOLS="Cloud Foundry CLI, Git, Maven, Node.js"
 TOOLS_SWITCHES="--cf --git --maven --nodejs"
 
 local_read_args $@
-VERSION_JSON_URL=https://github.build.ge.com/raw/adoption/predix-machine-template-adapter-simulator/$BRANCH/version.json
+IZON_SH="https://github.build.ge.com/raw/adoption/izon/$BRANCH/izon.sh"
+VERSION_JSON_URL=https://github.build.ge.com/raw/adoption/$REPO_NAME/$BRANCH/version.json
 
 
 function check_internet() {
@@ -75,26 +76,13 @@ function init() {
   fi
 
   check_internet
-  #if needed, get the version.json that resolves dependent repos from another github repo
-  if [ ! -f "$VERSION_JSON" ]; then
-    curl -s -O $VERSION_JSON_URL
-  fi
+
   #get the script that reads version.json
   eval "$(curl -s -L $IZON_SH)"
-  #get the url and branch of the requested repo from the version.json
-  __readDependency "local-setup" LOCAL_SETUP_URL LOCAL_SETUP_BRANCH
-  #get the predix-scripts url and branch from the version.json
-  __readDependency $PREDIX_SCRIPTS PREDIX_SCRIPTS_URL PREDIX_SCRIPTS_BRANCH
-  if [ ! -d "$PREDIX_SCRIPTS" ]; then
-    echo "Cloning predix script repo ..."
-    git clone --depth 1 --branch $PREDIX_SCRIPTS_BRANCH $PREDIX_SCRIPTS_URL
-  else
-  	echo "Predix scripts repo found reusing it..."
-  	cd predix-scripts
-    git pull
-    cd ..
-  fi
-  source $PREDIX_SCRIPTS/bash/scripts/local-setup-funcs.sh
+
+  getVersionFile
+  getLocalSetupFuncs
+
 }
 
 if [[ $PRINT_USAGE == 1 ]]; then
@@ -109,6 +97,10 @@ else
   fi
 fi
 
+getPredixScripts
+#clone the repo itself if running from oneclick script
+getCurrentRepo
+
 SKIP_ALL_DONE=1
 echo "quickstart_args=$QUICKSTART_ARGS"
 source $PREDIX_SCRIPTS/bash/quickstart.sh $QUICKSTART_ARGS
@@ -116,7 +108,7 @@ source $PREDIX_SCRIPTS/bash/quickstart.sh $QUICKSTART_ARGS
 
 
 #post quickstart customizations
-cd $rootDir/..
+cd $REPO_NAME
 echo "MACHINE_VERSION : $MACHINE_VERSION"
 echo "PREDIX_MACHINE_HOME : $PREDIX_MACHINE_HOME"
 
@@ -134,23 +126,27 @@ configFile="$PREDIX_MACHINE_HOME/configuration/machine/com.ge.predix.workshop.no
 __find_and_replace ":TAE" ":$(echo $INSTANCE_PREPENDER | tr 'a-z' 'A-Z')" "$configFile" "$quickstartLogDir"
 echo "MAVEN_SETTINGS_FILE : $MAVEN_SETTINGS_FILE"
 
-./predix-scripts/bash/scripts/buildMavenBundle.sh "$PREDIX_MACHINE_HOME"
+../bash/scripts/buildMavenBundle.sh "$PREDIX_MACHINE_HOME"
+cd ..
 
-PREDIX_SERVICES_SUMMARY_FILE="predix-scripts/log/predix-services-summary.txt"
 
-echo "" >> "$PREDIX_SERVICES_SUMMARY_FILE"
-echo "Edge Device Specific Configuration" >> "$PREDIX_SERVICES_SUMMARY_FILE"
-echo "What did we do:"  >> "$PREDIX_SERVICES_SUMMARY_FILE"
-echo "We setup some configuration files in the Predix Machine container to read from a DataNode for our sensors"  >> "$PREDIX_SERVICES_SUMMARY_FILE"
-echo "We installed some Intel API jar files that represent the Intel mraa and upm API" >> "$PREDIX_SERVICES_SUMMARY_FILE"
-echo "We built and deployed the Machine Adapter bundle which reads from the Intel API" >> "$PREDIX_SERVICES_SUMMARY_FILE"
-echo "" >> "$PREDIX_SERVICES_SUMMARY_FILE"
+echo "" >> "$SUMMARY_TEXTFILE"
+echo "Edge Device Specific Configuration" >> "$SUMMARY_TEXTFILE"
+echo "What did we do:"  >> "$SUMMARY_TEXTFILE"
+echo "We setup some configuration files in the Predix Machine container to read from a DataNode for our sensors"  >> "$SUMMARY_TEXTFILE"
+echo "We installed some Intel API jar files that represent the Intel mraa and upm API" >> "$SUMMARY_TEXTFILE"
+echo "We built and deployed the Machine Adapter bundle which reads from the Intel API" >> "$SUMMARY_TEXTFILE"
+echo "" >> "$SUMMARY_TEXTFILE"
 echo "The Predix Machine is in 2 places.  1. where this script prepared the Predix Machine.  2. Where this script copied the compressed version to." >> "$SUMMARY_TEXTFILE"
 echo "You can go to location 2, back up any older copies of Predix Machine (if desired) and tar -xvzf Predix Machine and launch it there. " >> "$SUMMARY_TEXTFILE"
 echo "Or you can now start Machine at location 1 as follows" >> "$SUMMARY_TEXTFILE"
 echo "cd $PREDIX_MACHINE_HOME/machine/bin/predix" >> "$SUMMARY_TEXTFILE"
 echo "./start_container.sh clean" >> "$SUMMARY_TEXTFILE"
+echo "" >> "$SUMMARY_TEXTFILE"
+echo "NOTE: If you are behind a corporate proxy server be sure to update $PREDIX_MACHINE_HOME/configuration/machine/org.apache.http.proxyconfigurator-0.config" >> "$SUMMARY_TEXTFILE"
+echo "" >> "$SUMMARY_TEXTFILE"
 
 allDone
 
 __append_new_line_log "Successfully completed $APP_NAME installation!" "$quickstartLogDir"
+__append_new_line_log "" "$quickstartLogDir"
