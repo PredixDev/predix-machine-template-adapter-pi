@@ -45,8 +45,8 @@ VERSION_JSON="version.json"
 PREDIX_SCRIPTS=predix-scripts
 VERSION_JSON="version.json"
 APP_NAME="Edge Starter: Predix Machine for Raspberry Pi"
-TOOLS="Cloud Foundry CLI, Git, Maven, Node.js"
-TOOLS_SWITCHES="--cf --git --maven --nodejs"
+TOOLS="Cloud Foundry CLI, Git, Maven, Node.js, Predix CLI"
+TOOLS_SWITCHES="--cf --git --maven --nodejs --predixcli"
 
 local_read_args $@
 IZON_SH="https://github.build.ge.com/raw/adoption/izon/$BRANCH/izon.sh"
