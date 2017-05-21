@@ -44,6 +44,7 @@ REPO_NAME=predix-machine-template-adapter-pi
 VERSION_JSON="version.json"
 PREDIX_SCRIPTS=predix-scripts
 VERSION_JSON="version.json"
+APP_DIR="edge-raspberry-pi"
 APP_NAME="Edge Starter: Predix Machine for Raspberry Pi"
 TOOLS="Cloud Foundry CLI, Git, Maven, Node.js, Predix CLI"
 TOOLS_SWITCHES="--cf --git --maven --nodejs --predixcli"
@@ -73,6 +74,10 @@ function init() {
   if [[ $currentDir == *"scripts" ]]; then
     echo 'Please launch the script from the root dir of the project'
     exit 1
+  fi
+  if [[ ! $currentDir == *"$REPO_NAME" ]]; then
+    mkdir -p $APP_DIR
+    cd $APP_DIR
   fi
 
   check_internet
