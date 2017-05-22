@@ -38,6 +38,9 @@ SET SHELL_SCRIPT_NAME=quickstart-machine-pi.sh
 SET APP_NAME="Edge Starter for Raspberry Pi"
 SET TOOLS=Cloud Foundry CLI, Git, Maven, Node.js, Predix CLI
 SET TOOLS_SWITCHES=/cf /git /maven /nodejs /predixcli
+
+SET SHELL_SCRIPT_URL=https://raw.githubusercontent.com/PredixDev/!REPO_NAME!/!BRANCH!/scripts/!SHELL_SCRIPT_NAME!
+
 GOTO START
 
 :CHECK_DIR
