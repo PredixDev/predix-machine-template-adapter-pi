@@ -3,16 +3,16 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ge.predix.solsvc</groupId>
 	<artifactId>predix-machine-template-adapter-pi</artifactId>
-	<version>1.1.124</version>
+	<version>1.1.128</version>
 	<packaging>bundle</packaging>
 
 	<properties>
-
-		<!-- Project Properties -->
+        <com.scireum.parsii.version>2.3</com.scireum.parsii.version>
+        <!-- Project Properties -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-        
+
         <!-- Maven Properties -->
         <clover.bundle.import />
         <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
@@ -26,12 +26,10 @@
         <maven.plugins.maven-javadoc-plugin.version>2.10.3</maven.plugins.maven-javadoc-plugin.version>
         <maven.plugins.maven-release-plugin.version>2.5.3</maven.plugins.maven-release-plugin.version>
         <maven.plugins.maven-resources-plugin.version>3.0.1</maven.plugins.maven-resources-plugin.version>
-        
-        <com.scireum.parsii.version>2.3</com.scireum.parsii.version>
-        
+
         <!-- Logging Properties -->
         <org.slf4j.version>1.7.21</org.slf4j.version>
-        
+
         <!-- This actually drives the BND used during compile time. The version of this plugin will map to a version of BND -->
         <org.apache.felix.maven-bundle-plugin.version>3.0.1</org.apache.felix.maven-bundle-plugin.version>
 
@@ -49,9 +47,6 @@
 
         <javax.ws.rs.version>2.0.1</javax.ws.rs.version>
         <org.apache.commons.io.version>2.5</org.apache.commons.io.version>
-
-        <!-- Proximetry airsync -->
-        <com.proximetry.agent-api.version>0.3.4</com.proximetry.agent-api.version>
 
         <org.eclipse.jgit.version>4.3.1.201605051710-r</org.eclipse.jgit.version>
 
@@ -78,7 +73,7 @@
 
         <!-- Protobuf Dependencies. These same versions should match what are in the predixmachine-parent/pom.xml and the git:proto/pom.xml -->
         <com.google.protobuf.version>3.0.0</com.google.protobuf.version>
-        
+
 		<!-- 3rd Party Testing-Dependency Bundle versions -->
         <maven-clover2-plugin.version>3.1.8</maven-clover2-plugin.version>
         <maven-surefire-plugin.version>2.5</maven-surefire-plugin.version>
@@ -91,8 +86,8 @@
         <skipTests>false</skipTests>
 
 		<!-- Predix Machine project versions -->
-        <dspmicro.version>16.4.1</dspmicro.version>
-        <dspmicro.parent.project.version>16.4.1</dspmicro.parent.project.version>
+        <dspmicro.version>17.1.2</dspmicro.version>
+        <dspmicro.parent.project.version>17.1.2</dspmicro.parent.project.version>
 
         <!-- Predix Machine bundle versions -->
         <dspmicro.databus.project.version>${dspmicro.parent.project.version}</dspmicro.databus.project.version>
@@ -108,9 +103,8 @@
         <dspmicro.predixcloud-identity.project.version>${dspmicro.parent.project.version}</dspmicro.predixcloud-identity.project.version>
         <dspmicro.cloud-gateway.project.version>${dspmicro.parent.project.version}</dspmicro.cloud-gateway.project.version>
         <!-- Proto bundle -->
-        <com.google.protobuf.version>3.0.0</com.google.protobuf.version>
         <predixmachine.protobuf-models.version>${dspmicro.parent.project.version}</predixmachine.protobuf-models.version>
-	
+
 		<!-- 3rd Party package versions -->
         <import.org.osgi.framework>"[1.7,2)"</import.org.osgi.framework>
         <import.org.osgi.service.cm>"[1.5,2)"</import.org.osgi.service.cm>
@@ -135,7 +129,7 @@
         <!-- httpcore is version 4.4 and httpclient is 4.5 -->
         <import.org.apache.http>"[4.4,4.6)"</import.org.apache.http>
         <import.org.apache.commons.io>"[1.5,2)"</import.org.apache.commons.io>
-        <!-- Prosyst bundles their own version of file upload org.apache.commons-fileupload-1.2.2-prosyst1 
+        <!-- Prosyst bundles their own version of file upload org.apache.commons-fileupload-1.2.2-prosyst1
             (1.2.2). -->
         <import.org.apache.commons.fileupload>"[1.2,1.3)"</import.org.apache.commons.fileupload>
 
@@ -143,19 +137,19 @@
         <import.org.codehaus.jackson.map>"[1.9,2)"</import.org.codehaus.jackson.map>
         <import.org.codehaus.jackson.type>"[1.9,2)"</import.org.codehaus.jackson.type>
         <import.org.codehaus.jackson.map.annotate>"[1.9,2)"</import.org.codehaus.jackson.map.annotate>
-
+        
         <import.com.prosyst.util.encode>"[2.1,3)"</import.com.prosyst.util.encode>
         <import.com.prosyst.mbs.services.useradmin>"[3.0,4)"</import.com.prosyst.mbs.services.useradmin>
 
 		<!-- Used for jGit -->
         <import.org.eclipse.jgit>"[4.0,5.0)"</import.org.eclipse.jgit>
-		
+
 		<!-- Used for rmq -->
         <import.com.rabbitmq>"[3.0,3.5)"</import.com.rabbitmq>
-		
+
 		<!-- Used for MQTT Client -->
         <import.org.eclipse.paho.client.mqttv3>"[1.0,2.0)"</import.org.eclipse.paho.client.mqttv3>
-		
+
 		<!-- DSP micro API package versions -->
         <import.com.ge.dspmicro.security.sslcontext.api>"[1.0,2.0)"</import.com.ge.dspmicro.security.sslcontext.api>
 
@@ -166,7 +160,7 @@
 
         <import.com.ge.dspmicro.machinegateway.api>"[1.4,2.0)"</import.com.ge.dspmicro.machinegateway.api>
 
-        <import.com.ge.dspmicro.machinegateway.types>"[1.3,2.0)"</import.com.ge.dspmicro.machinegateway.types>
+        <import.com.ge.dspmicro.machinegateway.types>"[1.4,2.0)"</import.com.ge.dspmicro.machinegateway.types>
 
         <import.com.ge.dspmicro.modelregistry.api>"[1.0,2.0)"</import.com.ge.dspmicro.modelregistry.api>
         <import.com.ge.dspmicro.modelregistry.api.types>"[1.0,2.0)"</import.com.ge.dspmicro.modelregistry.api.types>
@@ -183,34 +177,30 @@
 
         <import.com.ge.dspmicro.machineadapter.mqtt.api>"[1.0,2.0)"</import.com.ge.dspmicro.machineadapter.mqtt.api>
 
-        <import.com.ge.dspmicro.device.api.commandframework>"[1.0,2.0)"</import.com.ge.dspmicro.device.api.commandframework>
+        <import.com.ge.dspmicro.device.api.frameworkcomm>"[2.0,3.0)"</import.com.ge.dspmicro.device.api.frameworkcomm>
 
-        <import.com.ge.dspmicro.device.api.frameworkcomm>"[1.0,2.0)"</import.com.ge.dspmicro.device.api.frameworkcomm>
-        
         <import.com.ge.dspmicro.cloud.gateway.api>"[1.0,2.0)"</import.com.ge.dspmicro.cloud.gateway.api>
 
-        <import.com.ge.dspmicro.databus.api>"[1.1,2.0)"</import.com.ge.dspmicro.databus.api>
+        <import.com.ge.dspmicro.databus.api>"[2.0,3.0)"</import.com.ge.dspmicro.databus.api>
         <!-- these must match the exports in the samples/sample-apps/pom.xml and the git:proto/pom.xml -->
         <import.com.ge.predixmachine.datacomm>"[1.0,2.0)"</import.com.ge.predixmachine.datacomm>
-        
-        <!-- Proximetry airsync API - used for one demand polling -->
-        <import.com.proximetry.osgiagent.api.version>"[0.3.4,1)"</import.com.proximetry.osgiagent.api.version>
-        
+
         <!-- River Services -->
         <export.com.ge.dspmicro.river.api>1.0.0</export.com.ge.dspmicro.river.api>
         <import.com.ge.dspmicro.river.api>"[1.0,2.0)"</import.com.ge.dspmicro.river.api>
 
         <export.com.ge.dspmicro.httpriver.send.api>1.1.0</export.com.ge.dspmicro.httpriver.send.api>
         <import.com.ge.dspmicro.httpriver.send.api>"[1.0,2.0)"</import.com.ge.dspmicro.httpriver.send.api>
-        
+
         <!-- these must match the exports in the samples/sample-apps/pom.xml and the git:proto/pom.xml -->
         <import.com.google.protobuf>"[3.0,4.0)"</import.com.google.protobuf>
+        <import.com.ge.predixmachine.datamodel.common>"[1.0,2.0)"</import.com.ge.predixmachine.datamodel.common>
         <import.com.ge.predixmachine.datamodel.commandcomm>"[1.0,2.0)"</import.com.ge.predixmachine.datamodel.commandcomm>
         <import.com.ge.predixmachine.datamodel.configcomm>"[1.0,2.0)"</import.com.ge.predixmachine.datamodel.configcomm>
         <import.com.ge.predixmachine.datamodel.datacomm>"[1.0,2.0)"</import.com.ge.predixmachine.datamodel.datacomm>
         <import.com.ge.predixmachine.datamodel.defaultcomm>"[1.0,2.0)"</import.com.ge.predixmachine.datamodel.defaultcomm>
-        <import.com.ge.predixmachine.datamodel.gateway>"[1.0,2.0)"</import.com.ge.predixmachine.datamodel.gateway>
-        <import.com.ge.predixmachine.datamodel.event>"[1.0,2.0)"</import.com.ge.predixmachine.datamodel.event>  
+        <import.com.ge.predixmachine.datamodel.gateway>"[1.1,2.0)"</import.com.ge.predixmachine.datamodel.gateway>
+        <import.com.ge.predixmachine.datamodel.event>"[1.0,2.0)"</import.com.ge.predixmachine.datamodel.event> 
    	</properties>
 	<dependencies>
 

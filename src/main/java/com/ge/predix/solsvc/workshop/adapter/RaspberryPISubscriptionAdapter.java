@@ -58,7 +58,7 @@ import parsii.tokenizer.ParseException;
 
 /**
  * 
- * @author Predix Machine Sample
+ * Subscription Adatper for Rasperry Pi
  */
 @SuppressWarnings({ "javadoc", "deprecation" })
 @Component(name = RaspberryPISubscriptionAdapter.SERVICE_PID, service =

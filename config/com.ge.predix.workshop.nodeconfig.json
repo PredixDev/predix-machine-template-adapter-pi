@@ -29,8 +29,6 @@
      	"nodePinType":"Analog",
      	"expression": ""
    	},
-   	
-   
 	{
 		"nodeName": "Button:TAE",
 		"nodeClass": "upm_grove.GroveButton",   

@@ -15,6 +15,11 @@ import aQute.bnd.annotation.metatype.Configurable;
 import aQute.bnd.annotation.metatype.Meta;
 import aQute.configurable.Config;
 
+
+/**
+ * This OSGI component holds the configuration for Subscription Adapter
+ *
+ */
 @Component(immediate=true,name=SampleMachineAdapterConfigImpl.SERVICE_PID,
 	designateFactory=Config.class,
 	configurationPolicy=ConfigurationPolicy.require,

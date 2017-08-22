@@ -13,10 +13,10 @@ public interface ISampleAdapterConfig {
 	public static final String PROPKEY_ADAPTER_NAME = "com.ge.predix.solsvc.workshop.adapter.Name";
 	public static final String PROPKEY_ADAPTER_DESCRIPTION = "com.ge.predix.solsvc.workshop.adapter.Description";
 	
-	int getUpdateInterval();
-	String getNodeConfigFile();
-	String getAdapterName();
-	String getAdapterDescription();
-	String[] getDataSubscriptions();
+	public int getUpdateInterval();
+	public String getNodeConfigFile();
+	public String getAdapterName();
+	public String getAdapterDescription();
+	public String[] getDataSubscriptions();
 	public Map<UUID, WorkshopDataNodePI> getDataNodes();
 }
