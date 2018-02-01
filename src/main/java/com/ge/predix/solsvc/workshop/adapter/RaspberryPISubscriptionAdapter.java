@@ -25,10 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +48,10 @@ import com.ge.predix.solsvc.workshop.types.WorkshopDataNodePI;
 import com.ge.predix.solsvc.workshop.types.WorkshopDataSubscription;
 import com.ge.predix.solsvc.workshop.types.WorkshopSubscriptionListener;
 
+import aQute.bnd.annotation.component.Activate;
+import aQute.bnd.annotation.component.Component;
+import aQute.bnd.annotation.component.Deactivate;
+import aQute.bnd.annotation.component.Reference;
 import parsii.eval.Expression;
 import parsii.eval.Parser;
 import parsii.tokenizer.ParseException;
@@ -61,7 +61,7 @@ import parsii.tokenizer.ParseException;
  * Subscription Adatper for Rasperry Pi
  */
 @SuppressWarnings({ "javadoc", "deprecation" })
-@Component(name = RaspberryPISubscriptionAdapter.SERVICE_PID, service =
+@Component(name = RaspberryPISubscriptionAdapter.SERVICE_PID, provide =
 {
 		ISubscriptionMachineAdapter.class, IMachineAdapter.class
 })
