@@ -1,7 +1,7 @@
-<a href="../../../../pages/adoption/predix-machine-template-adapter-pi/javadocs/index.html" target="_blank" >
+<a href="http://predixdev.github.io/predix-machine-template-adapter-pi/javadocs/index.html" target="_blank" >
 	<img height="50px" width="100px" src="images/javadoc.png" alt="view javadoc"></a>
 &nbsp;
-<a href="../../../../pages/adoption/predix-machine-template-adapter-pi" target="_blank">
+<a href="http://predixdev.github.io/predix-machine-template-adapter-pi" target="_blank">
 	<img height="50px" width="100px" src="images/pages.jpg" alt="view github pages">
 </a>
 
@@ -13,4 +13,4 @@ The adapter reads the data from sensors using the GrovePi api for Raspberry Pi.
 
 Additional info on the GrovePi apis can be found <a href="https://github.com/emoranchel/IoTDevices">here</a>
 
-[![Analytics](https://ga-beacon.appspot.com/UA-82773213-1/predix-machine-template-adapter-pi/readme?pixel)](https://github.com/PredixDev)
+[![Analytics](https://predix-beacon.appspot.com/UA-82773213-1/predix-machine-template-adapter-pi/readme?pixel)](https://github.com/PredixDev)

@@ -31,7 +31,7 @@ IF [!BRANCH!]==[] (
   EXIT /b 1
 )
 
-SET IZON_BAT=https://raw.githubusercontent.com/PredixDev/izon/master/izon.bat
+SET IZON_BAT=https://raw.githubusercontent.com/PredixDev/izon/1.3.0/izon.bat
 SET TUTORIAL=https://www.predix.io/resources/tutorials/journey.html#1752
 SET REPO_NAME=predix-machine-template-adapter-pi
 SET SHELL_SCRIPT_NAME=quickstart-machine-pi.sh

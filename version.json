@@ -1,17 +1,15 @@
 {
   "name": "Predix Machine Adapter for Raspberry Pi",
-  "version": "1.1.177",
+  "version": "2.0.48",
   "private": true,
   "dependencies": {
-    "local-setup": "https://github.com/PredixDev/local-setup#1.0.79",
-    "Predix-HelloWorld-WebApp": "https://github.com/PredixDev/Predix-HelloWorld-WebApp#1.1.134",
-    "predix-nodejs-starter": "https://github.com/PredixDev/predix-nodejs-starter#1.1.155",
-    "predix-machine-container-url": "https://raw.githubusercontent.com/PredixDev/predix-machine-templates/master/PredixMachineDebug-16.4.2.zip#",
-    "predix-machine-template-processor": "https://github.com/PredixDev/predix-machine-template-processor#2.2.13",
-    "predix-machine-template-adapter-pi": "https://github.com/PredixDev/predix-machine-template-adapter-pi#",
-    "predix-machine-templates": "https://github.com/PredixDev/predix-machine-templates#1.1.29",
-    "predix-scripts": "https://github.com/PredixDev/predix-scripts#1.1.124",
-    "winddata-timeseries-service": "https://github.com/PredixDev/winddata-timeseries-service#2.0.53"
+    "local-setup": "https://github.com/PredixDev/local-setup#1.0.106",
+    "Predix-HelloWorld-WebApp": "https://github.com/PredixDev/Predix-HelloWorld-WebApp#1.1.150",
+    "predix-nodejs-starter": "https://github.com/PredixDev/predix-nodejs-starter#1.1.168",
+    "predix-machine-template-processor": "https://github.com/PredixDev/predix-machine-template-processor#2.2.15",
+    "predix-machine-template-adapter-pi": "https://github.com/PredixDev/predix-machine-template-adapter-pi#2.0.48",
+    "predix-scripts": "https://github.com/PredixDev/predix-scripts#1.1.217",
+    "winddata-timeseries-service": "https://github.com/PredixDev/winddata-timeseries-service#2.0.61"
   },
   "author": "rishabhtulsian,swapnavad,susheelchoudhari"
 }
